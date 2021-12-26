@@ -2,6 +2,7 @@ from settings import *
 import pygame
 import os
 import sys
+import random
 
 pygame.init()
 
@@ -50,11 +51,7 @@ class Ground:
         self.rect2 = self.image2.get_rect()
         self.rect2.left = WIDTH
 
-        self.rect1.bottom = self.rect2.bottom = HEIGHT - 200
-
-    def draw(self):
-        screen.blit(self.image1, self.rect1)
-        screen.blit(self.image2, self.rect2)
+        self.rect1.bottom = self.rect2.bottom = HEIGHT // 1.25
 
     def update(self):
         if not pause:
@@ -67,8 +64,35 @@ class Ground:
             if self.rect2.left < -WIDTH:
                 self.rect2.left = self.rect1.right
 
+    def draw(self):
+        screen.blit(self.image1, self.rect1)
+        screen.blit(self.image2, self.rect2)
+
+
+class Cloud(pygame.sprite.Sprite):
+    """Cloud for background"""
+
+    def __init__(self):
+        super().__init__(cloud_group)
+        self.image = pygame.transform.scale(load_image('cloud.png'), (WIDTH // 6, 100))
+        self.rect = self.image.get_rect()
+
+        self.rect.left = WIDTH + random.randint(50, WIDTH)
+        self.rect.top = random.randint(50, HEIGHT // 3)
+
+    def update(self):
+        if not pause:
+            self.rect.left -= CLOUD_SPEED
+            if self.rect.right < 0:
+                self.rect.left = WIDTH + random.randint(50, WIDTH)
+                self.rect.top = random.randint(50, HEIGHT // 3)
+
 
 background = Ground()
+
+cloud_group = pygame.sprite.Group()
+for i in range(1, 3):
+    Cloud()
 
 pause = False
 running = True
@@ -80,6 +104,9 @@ while running:
 
     background.draw()
     background.update()
+
+    cloud_group.draw(screen)
+    cloud_group.update()
 
     pygame.display.flip()
 

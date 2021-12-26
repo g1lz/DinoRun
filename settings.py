@@ -7,6 +7,7 @@ FONT = 'arial_black'
 
 # Background settings
 BG_SPEED = 1
+CLOUD_SPEED = 1
 
 # Color
 BLACK = (0, 0, 0)
