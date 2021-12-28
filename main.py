@@ -51,7 +51,7 @@ class Ground:
         self.rect2 = self.image2.get_rect()
         self.rect2.left = WIDTH
 
-        self.rect1.bottom = self.rect2.bottom = 600
+        self.rect1.bottom = self.rect2.bottom = HEIGHT - 100
 
     def update(self):
         if not pause:
@@ -77,60 +77,94 @@ class Cloud(pygame.sprite.Sprite):
         self.image = pygame.transform.scale(load_image('cloud.png'), (250, 100))
         self.rect = self.image.get_rect()
 
-        self.rect.left = WIDTH + random.randint(50, WIDTH)
-        self.rect.top = random.randint(50, HEIGHT // 2)
+        self.rect.x = WIDTH + random.randint(50, WIDTH)
+        self.rect.y = random.randint(50, HEIGHT // 2)
 
     def update(self):
         if not pause:
             self.rect.left -= CLOUD_SPEED
             if self.rect.right < 0:
-                self.rect.left = WIDTH + random.randint(50, WIDTH)
-                self.rect.top = random.randint(50, HEIGHT // 2)
+                self.rect.x = WIDTH + random.randint(50, WIDTH)
+                self.rect.y = random.randint(50, HEIGHT // 2)
 
 
 class Dino(pygame.sprite.Sprite):
     """Main character"""
 
-    run = [pygame.transform.scale(load_image('dino_run_1.png'), (100, 100)),
-           pygame.transform.scale(load_image('dino_run_2.png'), (100, 100))]
+    run = [load_image('dino_run_1.png'),
+           load_image('dino_run_2.png')]
 
-    duck = [pygame.transform.scale(load_image('dino_duck_1.png'), (120, 100)),
-            pygame.transform.scale(load_image('dino_duck_2.png'), (120, 100))]
+    duck = [load_image('dino_duck_1.png'),
+            load_image('dino_duck_2.png')]
+
+    jump = [load_image('dino_jump.png')]
 
     def __init__(self):
         super().__init__(player_group)
 
+        self.jump = False
+
+        self.image = Dino.run[0]
+        self.rect = self.image.get_rect()
+        self.mask = pygame.mask.from_surface(self.image)
+
+        self.rect.x = X_POS
+        self.rect.y = Y_POS
+
         self.frames = 0
-
-        self.image = Dino.run[self.frames]
-        self.rect = self.image.get_rect(center=(150, 550))
-
-    def gravity(self):
-        if self.rect.centery <= 550:
-            self.rect.centery += GRAVITY
+        self.jump_velocity = VELOCITY
 
     def update(self):
-        self.gravity()
-
         if not pause:
-            pic_ind = self.frames // (FPS * 4 // len(Dino.run))
-            self.image = Dino.run[pic_ind]
-            self.frames = (self.frames + 1) % (FPS * 4)
+            self.frames = (self.frames + 1) % (FPS // 2)
 
-            if pygame.key.get_pressed()[pygame.K_DOWN] or pygame.key.get_pressed()[pygame.K_s]:
-                self.image = Dino.duck[pic_ind]
+            if self.jump:
+                self.dino_jump()
 
-            if pygame.key.get_pressed()[pygame.K_UP] or pygame.key.get_pressed()[pygame.K_w] or \
-                    pygame.key.get_pressed()[pygame.K_SPACE]:
-                if self.rect.centery >= 550:
-                    while self.rect.centery - VELOCITY > 40:
-                        self.rect.centery -= 1
+            if (pygame.key.get_pressed()[pygame.K_UP] or pygame.key.get_pressed()[pygame.K_w]) \
+                    and not self.jump:
+                self.jump = True
+
+            elif (pygame.key.get_pressed()[pygame.K_DOWN] or pygame.key.get_pressed()[pygame.K_s]) \
+                    and not self.jump:
+                self.dino_duck()
+
+            elif not ((pygame.key.get_pressed()[pygame.K_DOWN] or pygame.key.get_pressed()[
+                pygame.K_s]) or self.jump):
+                self.dino_run()
+
+    def dino_run(self):
+        self.image = Dino.run[self.frames // ((FPS // 2) // len(Dino.run))]
+
+        self.rect.x = X_POS
+        self.rect.y = Y_POS
+
+    def dino_duck(self):
+        self.image = Dino.duck[self.frames // ((FPS // 2) // len(Dino.duck))]
+
+        self.rect.x = X_POS
+        self.rect.y = Y_POS_DUCK
+
+    def dino_jump(self):
+        self.image = Dino.jump[0]
+
+        if self.jump:
+            self.rect.y -= self.jump_velocity * 4
+            self.jump_velocity -= 1
+
+        if self.jump_velocity < -VELOCITY:
+            self.jump = False
+            self.jump_velocity = VELOCITY
+
+            # update coordinates if duck was pressed
+            self.rect.x = X_POS
+            self.rect.y = Y_POS
 
 
 background = Ground()
 
 cloud_group = pygame.sprite.Group()
-for i in range(1, 4):
+for i in range(1, 3):
     Cloud()
 
 player_group = pygame.sprite.Group()
@@ -153,6 +187,7 @@ while running:
     player_group.draw(screen)
     player_group.update()
 
+    clock.tick(FPS)
     pygame.display.flip()
 
 pygame.quit()

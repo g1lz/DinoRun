@@ -6,14 +6,15 @@ FPS = 60
 FONT = 'arial_black'
 
 # Player settings
-VELOCITY = 50
-GRAVITY = 1
+X_POS = 50
+Y_POS = HEIGHT - 200
+Y_POS_DUCK = Y_POS + 30
+VELOCITY = 13
 
 # Background settings
-BG_SPEED = 1
-CLOUD_SPEED = 1
+BG_SPEED = 10
+CLOUD_SPEED = 5
 
 # Color
 BLACK = (0, 0, 0)
-GREY = (127, 127, 127)
 WHITE = (255, 255, 255)
