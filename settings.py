@@ -1,20 +1,22 @@
 # Screen settings
-WIDTH, HEIGHT = 1600, 720
+WIDTH, HEIGHT = 1280, 720
 FPS = 60
 
 # Text settings
-FONT = 'arial_black'
+FONT = 'arial black'
 
 # Player settings
-X_POS = 50
-Y_POS = HEIGHT - 200
-Y_POS_DUCK = Y_POS + 30
+X_STAY = 200
+Y_STAY = HEIGHT - 200
+Y_DUCK = Y_STAY + 30
 VELOCITY = 13
 
 # Background settings
 BG_SPEED = 10
-CLOUD_SPEED = 5
+ENEMY_SPEED = BG_SPEED
+ENEMY_POS = 600
+CLOUD_SPEED = BG_SPEED // 2
 
 # Color
-BLACK = (0, 0, 0)
+GREY = (83, 83, 83)
 WHITE = (255, 255, 255)

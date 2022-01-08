@@ -1,4 +1,5 @@
 from settings import *
+from random import randrange, choice
 import pygame
 import os
 import sys
@@ -39,6 +40,11 @@ def draw_text(words, surface, pos, size, colour, font_name, centered=False):
     surface.blit(text, pos)
 
 
+def terminate():
+    pygame.quit()
+    sys.exit()
+
+
 class Ground:
     """Ground for background"""
 
@@ -74,18 +80,19 @@ class Cloud(pygame.sprite.Sprite):
 
     def __init__(self):
         super().__init__(cloud_group)
+
         self.image = pygame.transform.scale(load_image('cloud.png'), (250, 100))
         self.rect = self.image.get_rect()
 
         self.rect.x = WIDTH + random.randint(50, WIDTH)
-        self.rect.y = random.randint(50, HEIGHT // 2)
+        self.rect.y = choice(range(50, HEIGHT // 2))
 
     def update(self):
         if not pause:
-            self.rect.left -= CLOUD_SPEED
+            self.rect.x -= CLOUD_SPEED
             if self.rect.right < 0:
                 self.rect.x = WIDTH + random.randint(50, WIDTH)
-                self.rect.y = random.randint(50, HEIGHT // 2)
+                self.rect.y = choice(range(50, HEIGHT // 2))
 
 
 class Dino(pygame.sprite.Sprite):
@@ -103,13 +110,13 @@ class Dino(pygame.sprite.Sprite):
         super().__init__(player_group)
 
         self.jump = False
-
         self.image = Dino.run[0]
+
         self.rect = self.image.get_rect()
         self.mask = pygame.mask.from_surface(self.image)
 
-        self.rect.x = X_POS
-        self.rect.y = Y_POS
+        self.rect.x = X_STAY
+        self.rect.y = Y_STAY
 
         self.frames = 0
         self.jump_velocity = VELOCITY
@@ -136,14 +143,14 @@ class Dino(pygame.sprite.Sprite):
     def dino_run(self):
         self.image = Dino.run[self.frames // ((FPS // 2) // len(Dino.run))]
 
-        self.rect.x = X_POS
-        self.rect.y = Y_POS
+        self.rect.x = X_STAY
+        self.rect.y = Y_STAY
 
     def dino_duck(self):
         self.image = Dino.duck[self.frames // ((FPS // 2) // len(Dino.duck))]
 
-        self.rect.x = X_POS
-        self.rect.y = Y_POS_DUCK
+        self.rect.x = X_STAY
+        self.rect.y = Y_DUCK
 
     def dino_jump(self):
         self.image = Dino.jump[0]
@@ -157,26 +164,187 @@ class Dino(pygame.sprite.Sprite):
             self.jump_velocity = VELOCITY
 
             # update coordinates if duck was pressed
-            self.rect.x = X_POS
-            self.rect.y = Y_POS
+            self.rect.x = X_STAY
+            self.rect.y = Y_STAY
+
+
+class Cactus(pygame.sprite.Sprite):
+    """Cactus enemies"""
+
+    def __init__(self):
+        super().__init__(cactus_group)
+
+        self.image = load_image(f"cactus_{choice(('3', '2', '1'))}.png")
+
+        self.rect = self.image.get_rect()
+        self.mask = pygame.mask.from_surface(self.image)
+
+        self.rect.left = WIDTH + random.randint(0, WIDTH // 2)
+        self.rect.bottom = HEIGHT - 100
+
+    def update(self):
+        global pause
+
+        if not pause:
+            if not pygame.sprite.collide_mask(self, player):
+                if self.rect.right > 0:
+                    self.rect.x -= ENEMY_SPEED
+                else:
+                    self.kill()
+            else:
+                if not pause:
+                    pause = True
+                    game_over_screen()
+
+
+class Ptero(pygame.sprite.Sprite):
+    """Ptero enemies"""
+
+    fly = [load_image('bird_fly_1.png'),
+           load_image('bird_fly_2.png')]
+
+    def __init__(self):
+        super().__init__(ptero_group)
+
+        self.image = Ptero.fly[0]
+        self.frames = 0
+
+        self.rect = self.image.get_rect()
+        self.mask = pygame.mask.from_surface(self.image)
+
+        self.rect.left = WIDTH + random.randint(WIDTH // 2 + 140, WIDTH)
+        self.rect.bottom = choice((ENEMY_POS, ENEMY_POS - 50, ENEMY_POS - 100))
+
+    def update(self):
+        global pause
+
+        if not pause:
+            self.frames = (self.frames + 1) % (FPS // 2)
+            self.image = Ptero.fly[self.frames // ((FPS // 2) // len(Ptero.fly))]
+
+            if not pygame.sprite.collide_mask(self, player):
+                if self.rect.right > 0:
+                    self.rect.x -= ENEMY_SPEED
+                else:
+                    self.kill()
+            else:
+                if not pause:
+                    pause = True
+                    game_over_screen()
+
+
+def spawn():
+    if not pause:
+        rareness = 65
+        if len(cloud_group) < 2 and randrange(rareness) == 14:
+            Cloud()
+
+        if len(cactus_group) < 1 and len(ptero_group) < 1 and randrange(rareness) == 14:
+            Cactus()
+            Ptero()
+
+
+def new_game():
+    global pause, score, max_score
+    pause = False
+
+    if score > max_score:
+        max_score = score
+        with open('records.txt', mode='a') as file:
+            file.write(str(max_score // 100) + '\n')
+
+    score = 0
+    cloud_group.empty()
+    cactus_group.empty()
+    ptero_group.empty()
+
+
+def display_score():
+    if max_score:
+        draw_text('MAX: ' + str(max_score // 100), screen, [WIDTH // 2, 100], 40,
+                  GREY, FONT, centered=True)
+        draw_text(str(score // 100), screen, [WIDTH // 2, 150], 40, GREY, FONT,
+                  centered=True)
+    else:
+        draw_text(str(score // 100), screen, [WIDTH // 2, 150], 40, GREY, FONT,
+                  centered=True)
+
+
+def start_screen():
+    screen.fill(WHITE)
+
+    with open('records.txt', mode='r') as file:
+        records = file.readlines()
+        all_records = [int(i.rstrip()) for i in records]
+
+        if len(all_records) != 0:
+            draw_text('BEST SCORE: ' + str(max(all_records)), screen, [WIDTH // 2, HEIGHT // 2], 40,
+                      GREY, FONT, centered=True)
+
+    draw_text('DINO RUN', screen, [WIDTH // 2, HEIGHT // 4], 40, GREY, FONT,
+              centered=True)
+    draw_text('PRESS SPACE TO START', screen, [WIDTH // 2, HEIGHT // 2 + 50], 40, GREY, FONT,
+              centered=True)
+
+    screen.blit(load_image('dino_run_1.png'), (WIDTH // 2 - 50, HEIGHT // 3 - 10))
+
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                terminate()
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    return
+
+        pygame.display.flip()
+        clock.tick(FPS)
+
+
+def game_over_screen():
+    draw_text('GAME OVER', screen, [WIDTH // 2, HEIGHT // 4], 40, GREY, FONT,
+              centered=True)
+    draw_text('PRESS SPACE TO RESTART', screen, [WIDTH // 2, HEIGHT // 3], 40, GREY, FONT,
+              centered=True)
+
+    screen.blit(load_image('restart.png'), (WIDTH // 2 - 40, HEIGHT // 3 + 40))
+
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                terminate()
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    new_game()
+                    return
+
+        pygame.display.flip()
+        clock.tick(FPS)
 
 
 background = Ground()
 
 cloud_group = pygame.sprite.Group()
-for i in range(1, 3):
-    Cloud()
 
 player_group = pygame.sprite.Group()
 player = Dino()
 
+cactus_group = pygame.sprite.Group()
+ptero_group = pygame.sprite.Group()
+
+score = 0
+max_score = 0
 pause = False
+
+start_screen()
+
 running = True
 while running:
     screen.fill(WHITE)
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+
+    spawn()
 
     background.draw()
     background.update()
@@ -187,7 +355,15 @@ while running:
     player_group.draw(screen)
     player_group.update()
 
-    clock.tick(FPS)
+    cactus_group.draw(screen)
+    cactus_group.update()
+
+    ptero_group.draw(screen)
+    ptero_group.update()
+
+    score += clock.tick(FPS)
+    display_score()
+
     pygame.display.flip()
 
 pygame.quit()
