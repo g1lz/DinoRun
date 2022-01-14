@@ -9,12 +9,12 @@ FONT = 'arial black'
 X_STAY = 200
 Y_STAY = HEIGHT - 200
 Y_DUCK = Y_STAY + 30
-VELOCITY = 13
+VELOCITY = 11
 
 # Background settings
 BG_SPEED = 10
 ENEMY_SPEED = BG_SPEED
-ENEMY_POS = 600
+ENEMY_POS = 550
 CLOUD_SPEED = BG_SPEED // 2
 
 # Color

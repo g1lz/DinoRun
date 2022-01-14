@@ -213,7 +213,7 @@ class Ptero(pygame.sprite.Sprite):
         self.mask = pygame.mask.from_surface(self.image)
 
         self.rect.left = WIDTH + random.randint(WIDTH // 2 + 140, WIDTH)
-        self.rect.bottom = choice((ENEMY_POS, ENEMY_POS - 50, ENEMY_POS - 100))
+        self.rect.bottom = choice((ENEMY_POS, ENEMY_POS - 100))
 
     def update(self):
         global pause
