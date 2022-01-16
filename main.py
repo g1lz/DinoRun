@@ -13,6 +13,10 @@ pygame.display.set_caption('Dino Run')
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 clock = pygame.time.Clock()
 
+bg_speed = BG_SPEED
+enemy_speed = ENEMY_SPEED
+cloud_speed = CLOUD_SPEED
+
 
 def load_image(image_name, color_key=None):
     fullname = os.path.join('data', image_name)
@@ -61,8 +65,8 @@ class Ground:
 
     def update(self):
         if not pause:
-            self.rect1.left -= BG_SPEED
-            self.rect2.left -= BG_SPEED
+            self.rect1.left -= bg_speed
+            self.rect2.left -= bg_speed
 
             if self.rect1.left < -WIDTH:
                 self.rect1.left = self.rect2.right
@@ -89,7 +93,7 @@ class Cloud(pygame.sprite.Sprite):
 
     def update(self):
         if not pause:
-            self.rect.x -= CLOUD_SPEED
+            self.rect.x -= cloud_speed
             if self.rect.right < 0:
                 self.rect.x = WIDTH + random.randint(50, WIDTH)
                 self.rect.y = choice(range(50, HEIGHT // 2))
@@ -188,7 +192,7 @@ class Cactus(pygame.sprite.Sprite):
         if not pause:
             if not pygame.sprite.collide_mask(self, player):
                 if self.rect.right > 0:
-                    self.rect.x -= ENEMY_SPEED
+                    self.rect.x -= enemy_speed
                 else:
                     self.kill()
             else:
@@ -224,7 +228,7 @@ class Ptero(pygame.sprite.Sprite):
 
             if not pygame.sprite.collide_mask(self, player):
                 if self.rect.right > 0:
-                    self.rect.x -= ENEMY_SPEED
+                    self.rect.x -= enemy_speed
                 else:
                     self.kill()
             else:
@@ -244,8 +248,17 @@ def spawn():
             Ptero()
 
 
+def increase_speed():
+    global bg_speed, enemy_speed, cloud_speed
+
+    if (score // 100) % 100 == 0:
+        bg_speed += 0.5
+        enemy_speed += 0.5
+        cloud_speed += 0.25
+
+
 def new_game():
-    global pause, score, max_score
+    global pause, score, max_score, bg_speed, enemy_speed, cloud_speed
     pause = False
 
     if score > max_score:
@@ -254,6 +267,10 @@ def new_game():
             file.write(str(max_score // 100) + '\n')
 
     score = 0
+    bg_speed = BG_SPEED
+    enemy_speed = ENEMY_SPEED
+    cloud_speed = CLOUD_SPEED
+
     cloud_group.empty()
     cactus_group.empty()
     ptero_group.empty()
@@ -366,6 +383,7 @@ while running:
 
     score += clock.tick(FPS)
     display_score()
+    increase_speed()
 
     pygame.display.flip()
 
