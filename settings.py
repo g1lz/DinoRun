@@ -13,9 +13,11 @@ VELOCITY = 12
 
 # Background settings
 BG_SPEED = 10
+CLOUD_SPEED = BG_SPEED // 2
+
+# Enemy settings
 ENEMY_SPEED = BG_SPEED
 PTERO_POS = HEIGHT - 120
-CLOUD_SPEED = BG_SPEED // 2
 
 # Color
 GREY = (83, 83, 83)

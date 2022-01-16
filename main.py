@@ -212,7 +212,7 @@ class Ptero(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.mask = pygame.mask.from_surface(self.image)
 
-        self.rect.left = WIDTH + random.randint(WIDTH // 2 + 200, WIDTH)
+        self.rect.left = WIDTH + random.randint(WIDTH // 2 + 250, WIDTH)
         self.rect.bottom = choice((PTERO_POS, PTERO_POS - 50))
 
     def update(self):
@@ -301,12 +301,15 @@ def start_screen():
 
 
 def game_over_screen():
-    draw_text('GAME OVER', screen, [WIDTH // 2, HEIGHT // 4], 40, GREY, FONT,
+    screen.fill(WHITE)
+
+    draw_text('GAME OVER', screen, [WIDTH // 2, HEIGHT // 3], 40, GREY, FONT,
               centered=True)
-    draw_text('PRESS SPACE TO RESTART', screen, [WIDTH // 2, HEIGHT // 3], 40, GREY, FONT,
+    draw_text('PRESS SPACE TO RESTART', screen, [WIDTH // 2, HEIGHT // 3 + 60], 40, GREY, FONT,
               centered=True)
 
-    screen.blit(load_image('restart.png'), (WIDTH // 2 - 40, HEIGHT // 3 + 40))
+    screen.blit(load_image('dino_lose.png'), (WIDTH // 2 - 35, HEIGHT // 3 - 125))
+    screen.blit(load_image('restart.png'), (WIDTH // 2 - 40, HEIGHT // 3 + 100))
 
     while True:
         for event in pygame.event.get():
